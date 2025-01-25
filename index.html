@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gruppenpuzzle Tool (Responsive)</title>
+    <style>
+        /* Grund-Layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            /* Breite dynamisch und dennoch zentriert, max. 1200px */
+            width: 95%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        textarea {
+            height: 100px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .output {
+            margin-top: 20px;
+        }
+
+        .group-section {
+            margin-top: 20px;
+        }
+
+        /* Responsive Grid: passt sich automatisch an Anzahl Spalten an */
+        .group-container {
+            display: grid;
+            /* 
+               auto-fit und minmax sorgen dafür, dass so viele Spalten wie möglich 
+               nebeneinander angezeigt werden, mit einer minimalen Spaltenbreite von 200px. 
+            */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .group {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .expert-0 { background-color: #ffcccc; }
+        .expert-1 { background-color: #ccffcc; }
+        .expert-2 { background-color: #ccccff; }
+        .expert-3 { background-color: #ffffcc; }
+        .expert-4 { background-color: #ffd9b3; }
+        .expert-5 { background-color: #d9b3ff; }
+
+        /* Footer immer am Ende, aber ohne den Inhalt zu überdecken (kein fixed). */
+        .footer {
+            margin-top: 40px;
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            border-top: 1px solid #ccc;
+        }
+
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Optional: Medienabfragen für weitere Feineinstellungen */
+        @media (max-width: 600px) {
+            body {
+                margin: 10px;
+                font-size: 0.95rem;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .footer {
+                font-size: 12px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            /* Größere Schrift für Whiteboards oder hochauflösende Bildschirme */
+            body {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>Gruppenpuzzle Generator</h1>
+            <p>
+                Dieses Tool hilft Ihnen, schnell und einfach Gruppenpuzzles zu erstellen. 
+                Geben Sie ein Oberthema, Unterthemen und die Namen der Schüler ein, 
+                und das Programm verteilt diese automatisch auf Expertengruppen und Stammgruppen. 
+                So wird sichergestellt, dass jede Stammgruppe mindestens einen Experten enthält.
+            </p>
+            <form id="puzzleForm">
+                <label for="topic">Oberthema</label>
+                <input type="text" id="topic" placeholder="Gib das Oberthema ein" required>
+
+                <label for="subtopics">Unterthemen (pro Zeile ein Thema)</label>
+                <textarea id="subtopics" placeholder="Gib die Unterthemen ein, eines pro Zeile" required></textarea>
+
+                <label for="students">Schülernamen (pro Zeile ein Name)</label>
+                <textarea id="students" placeholder="Max&#10;Anna&#10;Tom" required></textarea>
+
+                <button type="button" id="generate">Gruppen generieren</button>
+            </form>
+        </div>
+
+        <div class="output" id="output"></div>
+    </div>
+
+    <div class="footer">
+        Entwickelt von <a href="https://www.youtube.com/@HenrikAverbeck" target="_blank">Henrik Averbeck</a>
+    </div>
+
+    <script>
+        document.getElementById('generate').addEventListener('click', () => {
+            const topic = document.getElementById('topic').value.trim();
+            const subtopics = document.getElementById('subtopics').value
+                .split('\n')
+                .map(t => t.trim())
+                .filter(t => t !== '');
+            const students = document.getElementById('students').value
+                .split('\n')
+                .map(s => s.trim())
+                .filter(s => s !== '');
+
+            if (!topic || subtopics.length === 0 || students.length === 0) {
+                alert('Bitte fülle alle Felder aus.');
+                return;
+            }
+
+            const numTopics = subtopics.length;
+            const numStudents = students.length;
+
+            /* 
+               Hier kann man prüfen, ob nicht mehr Unterthemen als Schüler da sind.
+               In so einem Fall ließe sich z. B. das Skript abbrechen oder anpassen.
+            */
+            if (numTopics > numStudents) {
+                alert('Es sind mehr Unterthemen als Schüler vorhanden. Bitte korrigieren.');
+                return;
+            }
+
+            // Anzahl der Stammgruppen
+            const numGroups = Math.floor(numStudents / numTopics);
+            // Restliche Schüler
+            const remainingStudents = numStudents % numGroups;
+
+            // Initialisiere Gruppen
+            const expertGroups = Array.from({ length: numTopics }, () => []);
+            const stammgruppen = Array.from({ length: numGroups }, () => []);
+
+            // Schüler auf Expertengruppen verteilen
+            students.forEach((student, index) => {
+                const groupIndex = index % numTopics;
+                expertGroups[groupIndex].push({
+                    name: student,
+                    colorClass: `expert-${groupIndex}`
+                });
+            });
+
+            // Schüler aus Expertengruppen auf Stammgruppen verteilen
+            let currentGroupIndex = 0;
+            expertGroups.forEach((group, topicIndex) => {
+                group.forEach((student) => {
+                    stammgruppen[currentGroupIndex].push({
+                        name: student.name,
+                        colorClass: `expert-${topicIndex}`
+                    });
+                    currentGroupIndex = (currentGroupIndex + 1) % numGroups;
+                });
+            });
+
+            // Restliche Schüler identifizieren und verteilen
+            const assignedStudents = new Set(stammgruppen.flat().map(s => s.name));
+            const unassignedStudents = students.filter(s => !assignedStudents.has(s));
+
+            unassignedStudents.forEach((student, index) => {
+                const targetGroupIndex = index % numGroups;
+                stammgruppen[targetGroupIndex].push({
+                    name: student,
+                    colorClass: ''
+                });
+            });
+
+            // Ausgabe generieren
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `
+                <h2>${topic}</h2>
+                <p>Anzahl Schüler: ${numStudents} | Anzahl Themen: ${numTopics}</p>
+                <div class="group-section">
+                    <h3>Expertengruppen</h3>
+                    <div class="group-container">
+                        ${expertGroups.map((group, i) => `
+                            <div class="group">
+                                <h4>${subtopics[i]}</h4>
+                                <ul>
+                                    ${group.map(student => `
+                                        <li class="${student.colorClass}">${student.name}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="group-section">
+                    <h3>Stammgruppen</h3>
+                    <div class="group-container">
+                        ${stammgruppen.map((group, i) => `
+                            <div class="group">
+                                <h4>Stammgruppe ${i + 1}</h4>
+                                <ul>
+                                    ${group.map(student => `
+                                        <li class="${student.colorClass}">${student.name}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
+
